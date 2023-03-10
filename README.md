@@ -25,3 +25,7 @@ tailb lb_name
 ```
 tailb lb_name | jq 'select(.ElbStatusCode!="200")'
 ```
+
+```
+tailb lb_name -f TargetIP,ElbStatusCode
+```
