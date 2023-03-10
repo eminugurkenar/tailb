@@ -49,6 +49,25 @@ func DefaultOutputFormatOptions() OutputFormatOptions {
 	}
 }
 
+func NewOutputFormatOptions(fields []string) OutputFormatOptions {
+	fieldMap := make(map[string]bool)
+	for _, field := range fields {
+		fieldMap[field] = true
+	}
+
+	// Filter the default fields to only include those in the map
+	filteredFields := []string{}
+	for _, field := range DefaultOutputFormatOptions().Fields {
+		if fieldMap[field] {
+			filteredFields = append(filteredFields, field)
+		}
+	}
+
+	return OutputFormatOptions{
+		Fields: filteredFields,
+	}
+}
+
 func NewOutputFormater(kind string, o OutputFormatOptions) OutputFormater {
 	return NewJSONOutputFormater(o)
 }

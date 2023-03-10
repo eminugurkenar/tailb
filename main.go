@@ -72,7 +72,7 @@ func listLoadBalancers(ctx context.Context, s *session.Session) error {
 	return nil
 }
 
-func tail(ctx context.Context, s *session.Session, lbn string, start, end time.Time) error {
+func tail(ctx context.Context, s *session.Session, lbn string, start, end time.Time, fields []string) error {
 	elbc := elbv2.New(s)
 	s3c := s3.New(s)
 
@@ -97,7 +97,12 @@ func tail(ctx context.Context, s *session.Session, lbn string, start, end time.T
 		return err
 	}
 
-	o := output.NewOutputFormater("json", output.DefaultOutputFormatOptions())
+	of := output.DefaultOutputFormatOptions()
+	if len(fields) > 0 {
+		of = output.NewOutputFormatOptions(fields)
+	}
+
+	o := output.NewOutputFormater("json", of)
 
 	lr := read.NewObjectStorageReader(s3c, lb.GetAccessLogBucket(), prefixes, ctx)
 
@@ -131,14 +136,15 @@ func (a *AnyDate) Validate() error {
 
 var CLI struct {
 	Tail struct {
-		Loadbalancer string  `arg:"" name:"loadbalancer" help:"Loadbalancer to tail." type:"string"`
-		Start        AnyDate `help:"start date." short:"s" default:"${start}" required`
-		End          AnyDate `help:"end date." short:"e" default:"${end}" required`
-		Lines        int64   `help:"number of lines to print, (default -1, till end)" name:"nlines" short:"n" default:"-1" required`
-	} `cmd:"" name:"tail" default:"withargs" help:"Tail logs of given loadbalancer. (default command)"`
+		Loadbalancer string   `arg:"" name:"loadbalancer" help:"Loadbalancer to tail."`
+		Start        AnyDate  `short:"s" default:"${start}" required help:"start date."`
+		End          AnyDate  `short:"e" help:"end date." default:"${end}." required`
+		Lines        int64    `short:"n" default:"-1" required help:"number of lines to print, (default -1, till end)." name:"nlines"`
+		Fields       []string `short:"f" help:"fields to be shown in output."`
+	} `cmd:"" name:"tail" default:"withargs" help:"tail logs of given loadbalancer (default command)."`
 
 	ListLoadBalancers struct {
-	} `cmd:"" name:"ls" help:"List loadbalancers."`
+	} `cmd:"" name:"ls" help:"list loadbalancers."`
 }
 
 func main() {
@@ -156,7 +162,7 @@ func main() {
 		start, _ := dateparse.ParseLocal(string(CLI.Tail.Start))
 		end, _ := dateparse.ParseLocal(string(CLI.Tail.End))
 
-		if err := tail(ctx, s, CLI.Tail.Loadbalancer, start, end); err != nil {
+		if err := tail(ctx, s, CLI.Tail.Loadbalancer, start, end, CLI.Tail.Fields); err != nil {
 			fmt.Println(err)
 		}
 	case "ls":
