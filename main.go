@@ -92,7 +92,10 @@ func tail(ctx context.Context, s *session.Session, lbn string, start, end time.T
 		prefixes = append(prefixes, fmt.Sprintf("%s/%s", lb.GetAccessLogPrefix(), d.Format("2006/01/02")))
 	}
 
-	p := parse.NewParser(lb.GetType())
+	p, err := parse.NewParser(lb.GetType())
+	if err != nil {
+		return err
+	}
 
 	o := output.NewOutputFormater("json", output.DefaultOutputFormatOptions())
 
