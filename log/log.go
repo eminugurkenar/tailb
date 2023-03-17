@@ -37,7 +37,7 @@ type NLBLog struct {
 }
 
 func (l NLBLog) LineKind() string {
-	return "nlb"
+	return "network"
 }
 
 type ALBLog struct {
@@ -68,5 +68,5 @@ type ALBLog struct {
 }
 
 func (l ALBLog) LineKind() string {
-	return "alb"
+	return "application"
 }

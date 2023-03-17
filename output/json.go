@@ -30,41 +30,27 @@ func (f *JSONOutputFormater) Format(l log.Line) ([]byte, error) {
 func (l JsonLog) MarshalJSON() ([]byte, error) {
 	kind := l.LineKind()
 
-	var rtb reflect.Type
-	var rvb reflect.Value
-
-	var rtl reflect.Type
-	var rvl reflect.Value
+	var fieldValues map[string]interface{}
 
 	switch kind {
-	case "alb":
+	case "application":
 		l := l.Line.(log.ALBLog)
-		rtb, rvb = reflect.TypeOf(l.Log), reflect.ValueOf(l.Log)
-		rtl, rvl = reflect.TypeOf(l), reflect.ValueOf(l)
-	case "nlb":
+		fieldValues = getFieldValues(l)
+	case "network":
 		l := l.Line.(log.NLBLog)
-		rtb, rvb = reflect.TypeOf(l.Log), reflect.ValueOf(l.Log)
-		rtl, rvl = reflect.TypeOf(l), reflect.ValueOf(l)
+		fieldValues = getFieldValues(l)
 	default:
 		return nil, fmt.Errorf("Unknown log type %s", kind)
 	}
 
 	formatedLog := make(map[string]interface{})
 
-	for i := 0; i < rtb.NumField(); i++ {
-		if !l.fieldFilter[rtb.Field(i).Name] {
+	for k, v := range fieldValues {
+		if !l.fieldFilter[k] {
 			continue
 		}
 
-		formatedLog[rtb.Field(i).Name] = rvb.Field(i).Interface()
-	}
-
-	for i := 0; i < rtl.NumField(); i++ {
-		if !l.fieldFilter[rtl.Field(i).Name] {
-			continue
-		}
-
-		formatedLog[rtl.Field(i).Name] = rvl.Field(i).Interface()
+		formatedLog[k] = v
 	}
 
 	return json.Marshal(formatedLog)
@@ -78,4 +64,27 @@ func createFieldFilter(fields []string) map[string]bool {
 	}
 
 	return filter
+}
+
+func getFieldValues(v interface{}) map[string]interface{} {
+	values := make(map[string]interface{})
+
+	t := reflect.TypeOf(v)
+	vv := reflect.ValueOf(v)
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		value := vv.Field(i)
+
+		if field.Anonymous {
+			embeddedValues := getFieldValues(value.Interface())
+			for k, v := range embeddedValues {
+				values[k] = v
+			}
+		} else {
+			values[field.Name] = value.Interface()
+		}
+	}
+
+	return values
 }
