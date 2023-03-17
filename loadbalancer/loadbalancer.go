@@ -34,7 +34,7 @@ func (l *LoadBalancer) GetArn() string {
 	return l.arn
 }
 
-func (l *LoadBalancer) GetType() string {
+func (l *LoadBalancer) GetKind() string {
 	return l.kind
 }
 

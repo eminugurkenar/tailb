@@ -3,7 +3,6 @@ package output
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 
 	"github.com/eminugurkenar/tailb/log"
 )
@@ -54,37 +53,4 @@ func (l JsonLog) MarshalJSON() ([]byte, error) {
 	}
 
 	return json.Marshal(formatedLog)
-}
-
-func createFieldFilter(fields []string) map[string]bool {
-	filter := make(map[string]bool)
-
-	for _, field := range fields {
-		filter[field] = true
-	}
-
-	return filter
-}
-
-func getFieldValues(v interface{}) map[string]interface{} {
-	values := make(map[string]interface{})
-
-	t := reflect.TypeOf(v)
-	vv := reflect.ValueOf(v)
-
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		value := vv.Field(i)
-
-		if field.Anonymous {
-			embeddedValues := getFieldValues(value.Interface())
-			for k, v := range embeddedValues {
-				values[k] = v
-			}
-		} else {
-			values[field.Name] = value.Interface()
-		}
-	}
-
-	return values
 }

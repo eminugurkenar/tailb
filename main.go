@@ -21,7 +21,7 @@ import (
 
 func printTable(lbs []*loadbalancer.LoadBalancer) {
 	var maxNameL int
-	var maxTypeL int
+	var maxKindL int
 	var maxArnResourceL int
 
 	for _, lb := range lbs {
@@ -29,8 +29,8 @@ func printTable(lbs []*loadbalancer.LoadBalancer) {
 			maxNameL = len(lb.GetName())
 		}
 
-		if len(lb.GetType()) > maxTypeL {
-			maxTypeL = len(lb.GetName())
+		if len(lb.GetKind()) > maxKindL {
+			maxKindL = len(lb.GetName())
 		}
 
 		if len(lb.GetArnResource()) > maxArnResourceL {
@@ -39,17 +39,17 @@ func printTable(lbs []*loadbalancer.LoadBalancer) {
 	}
 
 	maxNameL += 3
-	maxTypeL += 3
+	maxKindL += 3
 	maxArnResourceL += 3
 
 	for i, lb := range lbs {
 		if i == 0 { // table header
-			fmt.Printf("%-*s ", maxTypeL, "Type")
+			fmt.Printf("%-*s ", maxKindL, "Type")
 			fmt.Printf("%-*s ", maxNameL, "Name")
 			fmt.Printf("%-*s ", maxArnResourceL, "Arn")
 			fmt.Printf("%s \n", "Log Storage")
 		}
-		fmt.Printf("%-*s ", maxTypeL, lb.GetType())
+		fmt.Printf("%-*s ", maxKindL, lb.GetKind())
 		fmt.Printf("%-*s ", maxNameL, lb.GetName())
 		fmt.Printf("%-*s ", maxArnResourceL, lb.GetArnResource())
 		fmt.Printf("%s \n", lb.GetLogStorage())
@@ -92,14 +92,18 @@ func tail(ctx context.Context, s *session.Session, lbn string, start, end time.T
 		prefixes = append(prefixes, fmt.Sprintf("%s/%s", lb.GetAccessLogPrefix(), d.Format("2006/01/02")))
 	}
 
-	p, err := parse.NewParser(lb.GetType())
+	p, err := parse.NewParser(lb.GetKind())
 	if err != nil {
 		return err
 	}
 
-	of := output.DefaultOutputFormatOptions()
+	of, err := output.DefaultOutputFormatOptions(lb.GetKind())
+	if err != nil {
+		return err
+	}
+
 	if len(fields) > 0 {
-		of = output.NewOutputFormatOptions(fields)
+		of, err = output.NewOutputFormatOptions(lb.GetKind(), fields)
 	}
 
 	o := output.NewOutputFormater("json", of)
