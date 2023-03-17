@@ -7,7 +7,7 @@ import (
 )
 
 type Parser interface {
-	Parse(line string) (log.Log, error)
+	Parse(line string) (log.Line, error)
 }
 
 func NewParser(kind string) (Parser, error) {

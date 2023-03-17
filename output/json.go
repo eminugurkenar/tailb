@@ -2,13 +2,14 @@ package output
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 
 	"github.com/eminugurkenar/tailb/log"
 )
 
 type JsonLog struct {
-	log.Log
+	log.Line
 	fieldFilter map[string]bool
 }
 
@@ -22,21 +23,48 @@ func NewJSONOutputFormater(o OutputFormatOptions) OutputFormater {
 	}
 }
 
-func (f *JSONOutputFormater) Format(l log.Log) ([]byte, error) {
+func (f *JSONOutputFormater) Format(l log.Line) ([]byte, error) {
 	return json.Marshal(JsonLog{l, f.fieldFilter})
 }
 
 func (l JsonLog) MarshalJSON() ([]byte, error) {
-	rt, rv := reflect.TypeOf(l.Log), reflect.ValueOf(l.Log)
+	kind := l.LineKind()
+
+	var rtb reflect.Type
+	var rvb reflect.Value
+
+	var rtl reflect.Type
+	var rvl reflect.Value
+
+	switch kind {
+	case "alb":
+		l := l.Line.(log.ALBLog)
+		rtb, rvb = reflect.TypeOf(l.Log), reflect.ValueOf(l.Log)
+		rtl, rvl = reflect.TypeOf(l), reflect.ValueOf(l)
+	case "nlb":
+		l := l.Line.(log.NLBLog)
+		rtb, rvb = reflect.TypeOf(l.Log), reflect.ValueOf(l.Log)
+		rtl, rvl = reflect.TypeOf(l), reflect.ValueOf(l)
+	default:
+		return nil, fmt.Errorf("Unknown log type %s", kind)
+	}
 
 	formatedLog := make(map[string]interface{})
 
-	for i := 0; i < rt.NumField(); i++ {
-		if !l.fieldFilter[rt.Field(i).Name] {
+	for i := 0; i < rtb.NumField(); i++ {
+		if !l.fieldFilter[rtb.Field(i).Name] {
 			continue
 		}
 
-		formatedLog[rt.Field(i).Name] = rv.Field(i).Interface()
+		formatedLog[rtb.Field(i).Name] = rvb.Field(i).Interface()
+	}
+
+	for i := 0; i < rtl.NumField(); i++ {
+		if !l.fieldFilter[rtl.Field(i).Name] {
+			continue
+		}
+
+		formatedLog[rtl.Field(i).Name] = rvl.Field(i).Interface()
 	}
 
 	return json.Marshal(formatedLog)

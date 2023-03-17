@@ -17,12 +17,13 @@ func NewALBParser() *ALBParser {
 	}
 }
 
-func (p *ALBParser) Parse(line string) (log.Log, error) {
-	l := log.Log{}
-	match := p.re.FindAllStringSubmatch(line, -1)
+func (p *ALBParser) Parse(line string) (log.Line, error) {
+	l := log.ALBLog{}
 
+	match := p.re.FindStringSubmatch(line)
 	fields := p.re.SubexpNames()
-	for i, m := range match[0] {
+
+	for i, m := range match {
 		switch fields[i] {
 		case "type":
 			l.Kind = m

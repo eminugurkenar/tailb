@@ -3,7 +3,7 @@ package output
 import "github.com/eminugurkenar/tailb/log"
 
 type OutputFormater interface {
-	Format(l log.Log) ([]byte, error)
+	Format(l log.Line) ([]byte, error)
 }
 
 type OutputFormatOptions struct {
