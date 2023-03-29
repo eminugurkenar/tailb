@@ -70,3 +70,22 @@ type ALBLog struct {
 func (l ALBLog) LineKind() string {
 	return "application"
 }
+
+type ELBLog struct {
+	Log
+	RequestProcessingTime string
+	BackendProcessingTime string
+	ClientResponseTime    string
+	ElbResponseCode       string
+	BackendResponseCode   string
+	RequestVerb           string
+	URL                   string
+	Protocol              string
+	UserAgent             string
+	SSLCipher             string
+	SSLProtocol           string
+}
+
+func (l ELBLog) LineKind() string {
+	return "classic"
+}

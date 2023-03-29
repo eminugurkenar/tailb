@@ -16,6 +16,8 @@ func NewParser(kind string) (Parser, error) {
 		return NewALBParser(), nil
 	case "network":
 		return NewNLBParser(), nil
+	case "classic":
+		return NewNLBParser(), nil
 	}
 	return nil, fmt.Errorf("parser not available for %s", kind)
 }

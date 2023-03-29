@@ -22,6 +22,8 @@ func DefaultOutputFormatOptions(kind string) (OutputFormatOptions, error) {
 		fieldsValues = getFieldValues(log.ALBLog{})
 	case "network":
 		fieldsValues = getFieldValues(log.NLBLog{})
+	case "classic":
+		fieldsValues = getFieldValues(log.ELBLog{})
 	default:
 		return OutputFormatOptions{}, fmt.Errorf("outputoptions not available for %s", kind)
 	}

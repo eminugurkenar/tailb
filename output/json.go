@@ -38,6 +38,9 @@ func (l JsonLog) MarshalJSON() ([]byte, error) {
 	case "network":
 		l := l.Line.(log.NLBLog)
 		fieldValues = getFieldValues(l)
+	case "classic":
+		l := l.Line.(log.ELBLog)
+		fieldValues = getFieldValues(l)
 	default:
 		return nil, fmt.Errorf("Unknown log type %s", kind)
 	}
